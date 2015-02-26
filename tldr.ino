@@ -71,9 +71,9 @@ void interpret_cmd ()
 }
 
 void loop() {
-  if (Serial.available ())
+  if (bt.available ())
   {
-    int c = Serial.read ();
+    int c = bt.read ();
     bt.write (c);
     if (c == '\n')
     {
