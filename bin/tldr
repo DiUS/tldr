@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+$: << File.join(File.dirname(__FILE__), "..", "lib")
+
+require 'serialport'
+require 'stringio'
+require 'tldr'
+
+device = SerialPort.new("/dev/tty.HC-05-DevB", 9600, 8, 1, SerialPort::NONE)
+command = TLDR::Command.new(device)
+
+print "tldr> "
+while (line = gets.chomp) != 'exit'
+  command.run(StringIO.new(line))
+  print "tldr> "
+end
