@@ -1,14 +1,14 @@
 #include <ZumoMotors.h>
 #include <SoftwareSerial.h>
 
+bool debug = false;
+
 SoftwareSerial bt(2,3); // RX, TX
 ZumoMotors motors;
 
 void setup() {
   bt.begin(9600);
-  bt.print ("# ");
   Serial.begin (9600);
-  Serial.print ("# ");
 }
 
 #define GRANULARITY 10
@@ -31,34 +31,26 @@ bool overflow = false;
 
 void forward (int n)
 {
-  bt.print ("Forward...");
   RunFor (n, speed, speed);
-  bt.println ("done");
 }
 void reverse (int n)
 {
-  bt.print ("Reverse...");
   RunFor (n, -speed, -speed);
-  bt.println ("done");
 }
 void left (int n)
 {
-  bt.print ("Left..");
   RunFor (n, -left_turn_speed, left_turn_speed);
-  bt.println ("done");
 }
 void right (int n)
 {
-  bt.print ("Right...");
   RunFor (n, right_turn_speed, -right_turn_speed);
-  bt.println ("done");
 }
 
 
-void interpret_cmd ()
+bool interpret_cmd ()
 {
   if (cmdidx == 0)
-    return; // empty command, just print new prompt
+    return true; // empty command, just print new prompt
 
   bool valid = true;
   if (strncmp ("fd ", cmdbuf, 3) == 0)
@@ -75,37 +67,48 @@ void interpret_cmd ()
     right_turn_speed = atoi (cmdbuf + 3);
   else if (strncmp ("ls ", cmdbuf, 3) == 0)
     left_turn_speed = atoi (cmdbuf + 3);
+  else if (strncmp ("debug ", cmdbuf, 6) == 0)
+    debug = atoi (cmdbuf + 6);
   else
     valid = false;
-  bt.println (valid ? "ok" : "error");
+  return valid;
 }
 
 void loop() {
   int c = -1;
+  Stream *s = 0;
   if (bt.available ())
   {
     c = bt.read ();
-    bt.write (c);
+    if (debug) bt.write (c);
+    s = &bt;
   }
   else if (Serial.available ())
   {
     c = Serial.read ();
-    Serial.write (c);
+    if (debug) Serial.write (c);
+    s = &Serial;
   }
   if (c != -1)
   {
     if (c == '\r' || c == '\n')
     {
       if (!overflow)
-        interpret_cmd ();
+      {
+        s->println (interpret_cmd () ? "0" : "1");
+      }
       else
       {
-        bt.println ("overflow");
+        s->println ("2");
         overflow = false;
       }
       cmdidx = 0;
       memset (cmdbuf, 0, sizeof (cmdbuf));
-      bt.print ("# ");
+      if (debug)
+      {
+        bt.print ("# ");
+        Serial.print ("# ");
+      }
     }
     else
     {
