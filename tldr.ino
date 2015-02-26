@@ -11,8 +11,11 @@ void setup() {
   Serial.print ("# ");
 }
 
-#define GRANULARITY 100
-#define SPEED 200
+#define GRANULARITY 10
+
+int speed = 300;
+int right_turn_speed = 272;
+int left_turn_speed = 260;
 
 void RunFor (int n, int speed_a, int speed_b)
 {
@@ -29,25 +32,25 @@ bool overflow = false;
 void forward (int n)
 {
   bt.print ("Forward...");
-  RunFor (n, SPEED, SPEED);
+  RunFor (n, speed, speed);
   bt.println ("done");
 }
 void reverse (int n)
 {
   bt.print ("Reverse...");
-  RunFor (n, -SPEED, -SPEED);
+  RunFor (n, -speed, -speed);
   bt.println ("done");
 }
 void left (int n)
 {
   bt.print ("Left..");
-  RunFor (n, -SPEED, SPEED);
+  RunFor (n, -left_turn_speed, left_turn_speed);
   bt.println ("done");
 }
 void right (int n)
 {
   bt.print ("Right...");
-  RunFor (n, SPEED, -SPEED);
+  RunFor (n, right_turn_speed, -right_turn_speed);
   bt.println ("done");
 }
 
@@ -66,6 +69,12 @@ void interpret_cmd ()
     left (atoi (cmdbuf + 3));
   else if (strncmp ("bk ", cmdbuf, 3) == 0)
     reverse (atoi (cmdbuf + 3));
+  else if (strncmp ("sp ", cmdbuf, 3) == 0)
+    speed = atoi (cmdbuf + 3);
+  else if (strncmp ("rs ", cmdbuf, 3) == 0)
+    right_turn_speed = atoi (cmdbuf + 3);
+  else if (strncmp ("ls ", cmdbuf, 3) == 0)
+    left_turn_speed = atoi (cmdbuf + 3);
   else
     valid = false;
   bt.println (valid ? "ok" : "error");
